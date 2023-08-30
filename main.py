@@ -1,5 +1,7 @@
+import json
 from tkinter import filedialog
 import yt_dlp
+from yt_dlp.utils import download_range_func
 import customtkinter
 
 
@@ -8,6 +10,8 @@ class App(customtkinter.CTk):
         super().__init__()
 
         # Creation de la fenetre de l'app
+        self.pourcent = None
+        self.progress_bar = None
         self.path = customtkinter.StringVar()
         self.yt_link = customtkinter.StringVar()
         self.geometry("800x400")
@@ -66,15 +70,15 @@ class App(customtkinter.CTk):
                 "flac",
                 "vorbis",
             ])
-        self.format_option.set("mp3")
+        self.format_option.set("opus")
         self.format_option.grid(row=1, column=0, padx=10, pady=10)
 
-        # Barre de progression
-        self.pourcent = customtkinter.CTkLabel(self, text='0%')
-        self.pourcent.grid(row=2, column=2, padx=20, pady=10, sticky="ew")
-        self.progress_bar = customtkinter.CTkProgressBar(self)
-        self.progress_bar.set(0)
-        self.progress_bar.grid(row=2, column=0, padx=20, pady=10, columnspan=2, sticky="ew")
+        # # Barre de progression
+        # self.pourcent = customtkinter.CTkLabel(self, text='0%')
+        # self.pourcent.grid(row=2, column=2, padx=20, pady=10, sticky="ew")
+        # self.progress_bar = customtkinter.CTkProgressBar(self)
+        # self.progress_bar.set(0)
+        # self.progress_bar.grid(row=2, column=0, padx=20, pady=10, columnspan=2, sticky="ew")
 
         # Bouton pour dl
         self.label_complete = customtkinter.CTkLabel(self, text="")
@@ -91,34 +95,55 @@ class App(customtkinter.CTk):
 
     # Fonction Download
     def downloadyt(self):
-        # try:
+
         self.label_complete.configure(self, text="")
         ytlink = self.input_link.get()
-        # ytlink = 'https://www.youtube.com/watch?v=GpuwwG6RaEY'
+        # ytlink = 'https://youtu.be/2F0G8LKvtnE'
         ytpath = {'home': self.path.get()}
 
         ydl_opts = {
             'format': self.format_option.get() + "/bestaudio/best",
             'paths': ytpath,
             'ignoreerrors': True,
-            # 'outtmpl': '%(uploader)s/%(albums)/%(title)s.%(ext)s',
             'outtmpl': '%(uploader)s/%(title)s.%(ext)s',
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': self.format_option.get(),
             }],
-            # 'progress_hooks': [self.my_hook],
+            'prefer_ffmpeg': True,
+            'progress_hooks': None,
+            # 'download_ranges': download_range_func()
+
         }
 
+        if "youtube" in ytlink or "youtu.be" in ytlink:
+            if "playlist" in ytlink:
+                ydl_opts.update({'outtmpl': '%(playlist)s/%(uploader)s/%(title)s.%(ext)s'})
+
+            ydl_opts.update({'progress_hooks': [self.percent]})
+
+
+        if "soundcloud" in ytlink:
+            pass
+
+
+        # Barre de progression
+        self.pourcent = customtkinter.CTkLabel(self, text='0%')
+        self.pourcent.grid(row=2, column=2, padx=20, pady=10, sticky="ew")
+        self.progress_bar = customtkinter.CTkProgressBar(self)
+        self.progress_bar.set(0)
+        self.progress_bar.grid(row=2, column=0, padx=20, pady=10, columnspan=2, sticky="ew")
+
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(ytlink, download=False)
+            # info = ydl.extract_info(ytlink, download=False)
+            # print(json.dumps(info['chapters']))
             ydl.download(ytlink)
             self.label_complete.configure(self, text="Telechargement terminé", text_color="green")
 
     # except:
     #     self.label_complete.configure(text="Lien Youtube invalide", text_color="orange")
 
-    def my_hook(self, d):
+    def percent(self, d):
         downloaded_bytes = d['downloaded_bytes']
         total_bytes = d['total_bytes']
         percentage = (downloaded_bytes / total_bytes * 100)
@@ -126,7 +151,8 @@ class App(customtkinter.CTk):
         self.pourcent.configure(text=per + '%')
         self.pourcent.update()
         self.progress_bar.set(float(percentage) / 100)
-        # self.progress_bar.update()
+        self.progress_bar.update()
+
 
 
 # Run l'app
