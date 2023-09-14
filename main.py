@@ -11,16 +11,17 @@ class App(customtkinter.CTk):
         super().__init__()
 
         # Creation de la fenetre de l'app
-        self.pourcent = None
-        self.progress_bar = None
-        self.path = customtkinter.StringVar()
-        self.yt_link = customtkinter.StringVar()
+        customtkinter.set_appearance_mode("System")
+        customtkinter.set_default_color_theme("nighty")
         self.geometry("800x400")
         self.maxsize(800, 400)
         self.title("Pydoyt")
         self.iconbitmap("Pydoyt.ico")
-        customtkinter.set_appearance_mode("System")
-        customtkinter.set_default_color_theme("nighty")
+
+        self.pourcent = None
+        self.progress_bar = None
+        self.path = customtkinter.StringVar()
+        self.yt_link = customtkinter.StringVar()
 
         # Configuration du grid
         self.grid_columnconfigure((0, 1, 2), weight=1)
